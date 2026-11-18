@@ -23,17 +23,26 @@ python3 -m venv .tools/hd-venv
 These commands install the CPU version. The console or phone does not need Python, PyTorch, a GPU or an AI model.
 
 ### ROCM(Tested)
+
+Use Python 3.14 for AMD's self-contained `whl-next` wheels so the ROCm runtime libraries (along with NumPy and Pillow) are bundled inside `.tools/hd-venv` without requiring system-wide ROCm packages. Replace `gfx1101` (RX 7800 XT) with your own AMD GPU target if needed:
+
 ```sh
-python3 -m venv .tools/hd-venv
-.tools/hd-venv/bin/pip install numpy==2.5.4 Pillow==12.3.0
-.tools/hd-venv/bin/pip install torch=2.12.0 --index-url https://download.pytorch.org/whl/rocm7.2.2
+python3.14 -m venv .tools/hd-venv
+.tools/hd-venv/bin/python3.14 -m pip install --upgrade pip
+.tools/hd-venv/bin/python3.14 -m pip install --index-url https://stable.repo.amd.com/rocm/whl-next/ \
+  "torch[device-gfx1101]" \
+  "torchvision[device-gfx1101]" \
+  "torchaudio"
 ```
 
+*(Note: when running inside this virtual environment, keep invoking `.tools/hd-venv/bin/python3.14` explicitly if your system has a newer default Python such as 3.15.)*
+
 ### CUDA(Untested!)
+
 ```sh
 python3 -m venv .tools/hd-venv
 .tools/hd-venv/bin/pip install numpy==2.5.4 Pillow==12.3.0
-.tools/hd-venv/bin/pip install torch=2.12.0 --index-url https://download.pytorch.org/whl/cu134
+.tools/hd-venv/bin/pip install torch --index-url https://download.pytorch.org/whl/cu134
 ```
 
 ### Apple Silicon Macs
@@ -64,7 +73,8 @@ python3 tools/fetch-patches.py
 go run ./cmd/hd-pack --game-data originalgame --output .build/hd-personal --mods godot/patches/files --characters
 .tools/hd-venv/bin/python tools/upscale-hd.py --input .build/hd-personal --output .build/hd-personal/pack --workers 4 --threads 2
 ```
-*Add --device CUDA for GPU support, add --workers=2 for 16GB and --workers=1 for 8GB
+
+*Add `--device cuda` for GPU support (ROCm/CUDA). Use `--workers 1` on a GPU (and use `.tools/hd-venv/bin/python3.14` for the Python 3.14 ROCm venv)—a single worker already saturates the GPU at maximum speed and prevents multiple workers from competing for VRAM on 8–16 GB cards.*
 
 Omit `--mods godot/patches/files` if you only want the original artwork. This does not change which patches are active in the game.
 
