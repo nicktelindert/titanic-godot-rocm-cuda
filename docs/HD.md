@@ -25,15 +25,15 @@ These commands install the CPU version. The console or phone does not need Pytho
 ### ROCM(Tested)
 ```sh
 python3 -m venv .tools/hd-venv
-.tools/hd-venv/bin/pip install numpy==2.2.6 Pillow==11.3.0
-.tools/hd-venv/bin/pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/rocm10.0
+.tools/hd-venv/bin/pip install numpy==2.5.4 Pillow==12.3.0
+.tools/hd-venv/bin/pip install torch=2.12.0 --index-url https://download.pytorch.org/whl/rocm7.2.2
 ```
 
-### CUDA(experimental)
+### CUDA(Untested!)
 ```sh
 python3 -m venv .tools/hd-venv
-.tools/hd-venv/bin/pip install numpy==2.2.6 Pillow==11.3.0
-.tools/hd-venv/bin/pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu134
+.tools/hd-venv/bin/pip install numpy==2.5.4 Pillow==12.3.0
+.tools/hd-venv/bin/pip install torch=2.12.0 --index-url https://download.pytorch.org/whl/cu134
 ```
 
 ### Apple Silicon Macs
