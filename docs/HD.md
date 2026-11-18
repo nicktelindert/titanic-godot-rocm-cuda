@@ -74,7 +74,16 @@ go run ./cmd/hd-pack --game-data originalgame --output .build/hd-personal --mods
 .tools/hd-venv/bin/python tools/upscale-hd.py --input .build/hd-personal --output .build/hd-personal/pack --workers 4 --threads 2
 ```
 
-*Add `--device cuda` for GPU support (ROCm/CUDA). Use `--workers 1` on a GPU (and use `.tools/hd-venv/bin/python3.14` for the Python 3.14 ROCm venv)—a single worker already saturates the GPU at maximum speed and prevents multiple workers from competing for VRAM on 8–16 GB cards.*
+*Add `--device cuda` for GPU support (ROCm/CUDA). Use `--workers 2` on 16GB cards (or `--workers 1` on 8GB cards) together with `--threads 4` so CPU image compression keeps up with the GPU.*
+
+For AMD ROCm (RDNA 3 / RX 7800 XT), enabling AOTriton and fast MIOpen algorithm selection avoids slowdowns across varying asset resolutions:
+
+```sh
+TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1 MIOPEN_FIND_MODE=FAST \
+  .tools/hd-venv/bin/python3.14 tools/upscale-hd.py --input .build/hd-personal --output .build/hd-personal/pack --workers 2 --threads 4 --device cuda
+```
+
+*(If you run into VRAM limits on specific setups, add `PYTORCH_HIP_ALLOC_CONF="max_split_size_mb:256"` or drop to `--workers 1`.)*
 
 Omit `--mods godot/patches/files` if you only want the original artwork. This does not change which patches are active in the game.
 
