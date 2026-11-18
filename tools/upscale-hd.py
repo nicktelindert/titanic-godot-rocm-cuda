@@ -14,13 +14,15 @@ import urllib.request
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'hd'))
 from models import PRESETS, load_model
 
-def initialize(weights, denoise, threads, preset, needs_model=True, device='cpu'):
+def initialize(weights, denoise, threads, preset, needs_model=True, device='cpu', memory_fraction=0.80):
     if not needs_model:
         return
     import torch
     global model, network_scale, inference_device
     torch.set_num_threads(threads)
     torch.set_num_interop_threads(1)
+    if device == 'cuda':
+        torch.cuda.set_per_process_memory_fraction(memory_fraction, 0)
     inference_device = device
     model = load_model(preset, weights, denoise).to(device)
     network_scale = PRESETS[preset]['scale']
@@ -46,7 +48,7 @@ def upscale(task):
             import numpy as np
             import torch
             rgb = np.array(rgba.convert('RGB'), dtype=np.float32)/255
-            tensor = torch.from_numpy(rgb.transpose(2,0,1)).unsqueeze(0).contiguous(memory_format=torch.channels_last).to(inference_device)
+            tensor = torch.from_numpy(rgb.transpose(2,0,1)).unsqueeze(0).contiguous().to(inference_device)
             w,h = size
             if network_scale == 2 and (w%2 or h%2):
                 tensor = torch.nn.functional.pad(tensor, (0,w%2,0,h%2), mode='replicate')
@@ -146,7 +148,8 @@ def check_device(device, needs_model):
             raise ValueError('Metal (MPS) is unavailable. Use native arm64 Python and an MPS-enabled PyTorch on your Mac, or select --device cpu.')
 
 def process_tasks(tasks, weights, denoise, threads, preset, needs_model, device, workers):
-    args = (weights, denoise, threads, preset, needs_model, device)
+    memory_fraction = 0.80 / workers
+    args = (weights, denoise, threads, preset, needs_model, device, memory_fraction)
     if device == 'mps':
         # One Metal context in the main process. Forked GPU contexts and several
         # model copies add memory pressure without helping this per-image workload.
@@ -162,7 +165,7 @@ def main():
     p.add_argument('--output',default='.build/hd-personal/pack',help='pack folder, resumable with identical settings')
     p.add_argument('--models',default='.tools/hd-models')
     p.add_argument('--model',choices=PRESETS,default='riven',help='AI model for world and character art; UI always uses nearest-neighbor 2x')
-    p.add_argument('--device',choices=['cpu','mps'],default='cpu',help='cpu workers or the Apple Silicon GPU through Metal (MPS)')
+    p.add_argument('--device',choices=['cpu','mps','cuda'],default='cpu',help='cpu workers or the Apple Silicon GPU through Metal (MPS)')
     p.add_argument('--workers',type=int,help='CPU processes, default 4; Metal uses one process')
     p.add_argument('--threads',type=int,default=2)
     p.add_argument('--denoise',type=float,help='compact model only, default 0.3')
