@@ -22,6 +22,20 @@ python3 -m venv .tools/hd-venv
 
 These commands install the CPU version. The console or phone does not need Python, PyTorch, a GPU or an AI model.
 
+### ROCM(Tested)
+```sh
+python3 -m venv .tools/hd-venv
+.tools/hd-venv/bin/pip install numpy==2.2.6 Pillow==11.3.0
+.tools/hd-venv/bin/pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/rocm10.0
+```
+
+### CUDA(experimental)
+```sh
+python3 -m venv .tools/hd-venv
+.tools/hd-venv/bin/pip install numpy==2.2.6 Pillow==11.3.0
+.tools/hd-venv/bin/pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu134
+```
+
 ### Apple Silicon Macs
 
 Use native arm64 Python 3.11 to 3.13. Create the environment above, then install the Mac wheel from PyPI instead of using the Linux CPU index:
@@ -50,6 +64,7 @@ python3 tools/fetch-patches.py
 go run ./cmd/hd-pack --game-data originalgame --output .build/hd-personal --mods godot/patches/files --characters
 .tools/hd-venv/bin/python tools/upscale-hd.py --input .build/hd-personal --output .build/hd-personal/pack --workers 4 --threads 2
 ```
+*Add --device CUDA for GPU support, add --workers=2 for 16GB and --workers=1 for 8GB
 
 Omit `--mods godot/patches/files` if you only want the original artwork. This does not change which patches are active in the game.
 
